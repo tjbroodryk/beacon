@@ -1,4 +1,5 @@
-import { effect, isWatchable, onCleanup, type ReadonlyWatchable } from '@beacon/core';
+import { isWatchable, type ReadonlyWatchable } from '@beacon/core';
+import { effect, onCleanup } from '@beacon/core/internal';
 import type { JSX } from '@beacon/dom';
 import { createElement, type ComponentType } from 'react';
 import { createRoot } from 'react-dom/client';

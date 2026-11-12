@@ -32,7 +32,7 @@ export default function beacon(): Plugin {
         plugins: [
           [
             domExpressions,
-            { moduleName: '@beacon/dom', generate: 'dom', delegateEvents: true, wrapConditionals: true },
+            { moduleName: '@beacon/dom/runtime', generate: 'dom', delegateEvents: true, wrapConditionals: true },
           ],
         ],
       });
