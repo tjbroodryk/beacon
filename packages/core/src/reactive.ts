@@ -4,7 +4,7 @@ import {
   signal,
   untracked,
   type Signal,
-} from '@preact/signals-core';
+} from './signals';
 
 export { batch };
 

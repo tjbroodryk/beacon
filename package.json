@@ -2,9 +2,10 @@
   "name": "beacon",
   "private": true,
   "packageManager": "bun@1.4.4",
-  "workspaces": ["packages/*", "apps/*"],
+  "workspaces": ["packages/*", "apps/*", "tools/*"],
   "scripts": {
     "dev": "turbo run dev --filter=example",
+    "size": "bun run --cwd tools/size size",
     "build": "turbo run build",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck"

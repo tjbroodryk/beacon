@@ -7,9 +7,6 @@
     "test": "vitest run",
     "typecheck": "tsc -p ."
   },
-  "dependencies": {
-    "@preact/signals-core": "^1.14.5"
-  },
   "devDependencies": {
     "vitest": "^5.1.0"
   }
