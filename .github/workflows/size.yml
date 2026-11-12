@@ -1,0 +1,36 @@
+name: size
+
+# Re-measures the library and commits the README's size table when it changes.
+# Pushes made with GITHUB_TOKEN don't trigger workflows, so this can't loop.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: size
+  cancel-in-progress: true
+
+jobs:
+  size:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - run: bun run size -- --write
+      - name: Commit the updated size table
+        run: |
+          if git diff --quiet README.md; then
+            echo "Size unchanged"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update library size in README" README.md
+          git push

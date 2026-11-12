@@ -1,3 +1,4 @@
+/// <reference path="./babel.d.ts" />
 import { transformAsync } from '@babel/core';
 import typescript from '@babel/preset-typescript';
 import domExpressions from 'babel-plugin-jsx-dom-expressions';

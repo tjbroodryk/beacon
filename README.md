@@ -24,6 +24,20 @@ const App = view([Counter], (counter) => {
 mount(App, document.body, { models: [Counter], actions: [Increment] });
 ```
 
+## Size
+
+What beacon adds to an app, minified and compressed. CI re-measures on every push to `main` and
+commits the result here; run `bun run size` to measure locally.
+
+<!-- size:start -->
+| Bundle | min | gzip | brotli |
+| --- | ---: | ---: | ---: |
+| Hello world app (core + dom, tree-shaken) | 12.93 kB | 5.23 kB | 4.67 kB |
+| `@beacon/core`, every export | 5.89 kB | 2.30 kB | 2.06 kB |
+| `@beacon/dom` + core, every export | 27.59 kB | 10.74 kB | 9.58 kB |
+| `@beacon/inject`, every export | 1.42 kB | 0.66 kB | 0.58 kB |
+<!-- size:end -->
+
 ## Getting started
 
 ```bash

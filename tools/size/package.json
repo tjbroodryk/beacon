@@ -1,0 +1,18 @@
+{
+  "name": "@beacon/size",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "size": "bun src/size.ts",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@beacon/core": "workspace:*",
+    "@beacon/dom": "workspace:*",
+    "@beacon/inject": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.4",
+    "vite": "^8.3.8"
+  }
+}

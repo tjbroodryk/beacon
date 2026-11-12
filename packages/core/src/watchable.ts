@@ -1,4 +1,4 @@
-import { computed, effect, signal, untracked } from '@preact/signals-core';
+import { computed, effect, signal, untracked } from './signals';
 
 /** Call it to read and track; `snapshot()` reads without tracking. */
 export type ReadonlyWatchable<T> = {
