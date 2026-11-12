@@ -1,0 +1,16 @@
+{
+  "name": "beacon",
+  "private": true,
+  "packageManager": "bun@1.4.4",
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "dev": "turbo run dev --filter=example",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck"
+  },
+  "devDependencies": {
+    "turbo": "^2.11.11",
+    "typescript": "^5.9.3"
+  }
+}

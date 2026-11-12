@@ -1,0 +1,16 @@
+{
+  "name": "@beacon/core",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@preact/signals-core": "^1.14.5"
+  },
+  "devDependencies": {
+    "vitest": "^5.1.0"
+  }
+}
