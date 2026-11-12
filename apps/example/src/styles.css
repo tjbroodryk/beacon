@@ -90,6 +90,43 @@ kbd {
   white-space: nowrap;
 }
 
+.results {
+  margin: var(--space-2) 0 var(--space-3);
+  min-height: 1.5em;
+  transition: opacity 120ms;
+}
+.refreshing {
+  opacity: 0.55;
+}
+.async-failed {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  margin: var(--space-2) 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--chile-tint);
+  border: var(--stroke-node) solid var(--chile);
+  border-radius: var(--radius-md);
+  color: var(--chile-deep);
+}
+.error-text {
+  color: var(--chile-deep);
+}
+.status-line {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  min-height: 32px;
+  border-top: var(--stroke-rule) solid var(--rule);
+  padding-top: var(--space-2);
+  margin-top: var(--space-2);
+}
+.status-line .count {
+  min-width: 140px;
+  font-size: 12px;
+}
+
 .virtual {
   height: 280px;
   background: var(--bg);

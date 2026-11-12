@@ -1,6 +1,7 @@
-import { Action, batch, type ModelScope } from '@beacon/core';
+import { Action, type ModelScope } from '@beacon/core';
 import { ConfirmableAction } from './confirm';
 import { BigList, Todo, TodoList } from './models';
+import type { FakeApi } from './services';
 
 export class AddTodo extends Action {
   readonly title = 'Add todo';
@@ -51,8 +52,21 @@ export class MarkAllDone extends Action {
   }
 
   execute(_: void, scope: ModelScope): void {
-    // one save, not one per todo
-    batch(() => scope.get(TodoList).todos.snapshot().forEach((todo) => todo.done.set(true)));
+    // the runner batches an action's writes, so this saves once, not once per todo
+    scope.get(TodoList).todos.snapshot().forEach((todo) => todo.done.set(true));
+  }
+}
+
+/** Slow and sometimes fails: buttons read its pending and last outcome from the runner. */
+export class PingServer extends Action<void, number> {
+  readonly title = 'Ping server';
+
+  constructor(private readonly api: FakeApi) {
+    super();
+  }
+
+  execute(): Promise<number> {
+    return this.api.ping();
   }
 }
 

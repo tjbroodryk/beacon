@@ -32,9 +32,9 @@ commits the result here; run `bun run size` to measure locally.
 <!-- size:start -->
 | Bundle | min | gzip | brotli |
 | --- | ---: | ---: | ---: |
-| Hello world app (core + dom, tree-shaken) | 12.93 kB | 5.23 kB | 4.67 kB |
-| `@beacon/core`, every export | 5.89 kB | 2.30 kB | 2.06 kB |
-| `@beacon/dom` + core, every export | 27.59 kB | 10.74 kB | 9.58 kB |
+| Hello world app (core + dom, tree-shaken) | 13.43 kB | 5.42 kB | 4.84 kB |
+| `@beacon/core`, every export | 7.48 kB | 2.96 kB | 2.65 kB |
+| `@beacon/dom` + core, every export | 16.47 kB | 6.37 kB | 5.69 kB |
 | `@beacon/inject`, every export | 1.42 kB | 0.66 kB | 0.58 kB |
 <!-- size:end -->
 
@@ -58,6 +58,52 @@ bun run typecheck
 | [`example`](apps/example) | A command input over the applicable actions, todos (DI, per-row scopes, shortcuts, a confirm middleware), a virtual list sized by a Radix slider island, and a 100,000 × 1,000 virtual grid. |
 
 ## Out of the box
+
+**Async state, with every state handled.** An async watchable's state is a union, so there is no way
+to read its value without first checking which state it's in:
+
+```ts
+type AsyncState<T> =
+  | { kind: 'loading' }
+  | { kind: 'ready'; value: T; refreshing: boolean }
+  | { kind: 'failed'; error: unknown; previous: T | null };
+```
+
+```ts
+class Search extends Model {
+  readonly query = Watchable.fromValue('');
+  readonly settled = Watchable.debounced(this.query, 250);
+  readonly results = Watchable.async({
+    input: this.settled,                           // tracked: a change aborts the request in flight and reloads
+    load: (q, { signal }) => api.search(q, { signal }),
+    whileReloading: 'keep',                        // or 'clear'; required, so it's always a decision
+  });
+}
+```
+
+`whileReloading: 'keep'` leaves the last value on screen (as `refreshing`) during a reload, and
+hands it to the failed state as `previous`; `'clear'` goes back to `loading`. A late response from a
+superseded request never lands. `every` and `until` turn it into a poller, `refresh()` reloads or
+retries, and `ready()` is a promise for actions and tests. In a view, `<Async>` is how the value
+comes out, and all three branches are required props, so leaving out `failed` doesn't compile:
+
+```tsx
+<Async of={search.results} loading={() => <Spinner />} failed={(error, retry, previous) => …}>
+  {(results, refreshing) => <List items={results()} dimmed={refreshing()} />}
+</Async>
+```
+
+Pass `input` a watchable or an arrow function. A generic call written inline
+(`input: Watchable.debounced(…)`) loses TypeScript's inference of the input type; hold it in a field
+first, as above.
+
+**Rate control**: `Watchable.debounced(source, ms)` for input that triggers requests,
+`Watchable.throttled(source, ms)` for at most one update per window, and `Watchable.deferred(source)`
+for heavy local work, which catches up when the browser is idle and only ever computes the latest value.
+
+**Action state**: `useAction(X)` exposes `state` (idle, running, or the last outcome) and `pending`,
+tracked by the runner, so a button shows "saving…" whether the action ran from it, a shortcut or the
+command input. The runner also batches an action's writes, so they notify once.
 
 **Keyboard shortcuts** are a field on the action, so the same action serves a button and a key:
 
@@ -97,7 +143,11 @@ any providers into the component you pass.
 - **Call watchables to read them**: `{run.title()}`, `disabled={!save.applicable()}`. Calls inside JSX
   are tracked; `snapshot()` reads without tracking, for actions and other non-reactive code.
 - **Views only read models.** A view's body runs once, so there is no state or effect hook. State
-  lives in models, and side effects live in models too, cleaned up in `dispose()` when their scope goes.
+  lives in models, and so do side effects: `this.watch(source, listener)` in a model runs on changes
+  and is released when the model's scope goes, whether or not you override `dispose()`.
+- **No effects in the public API.** `@beacon/core` and `@beacon/dom` don't export `effect`; the
+  reactive primitives live in `@beacon/core/internal` for beacon's own renderers, and compiled JSX
+  imports its helpers from `@beacon/dom/runtime`.
 - **Actions change things.** `applicable(scope)` is reactive, and `execute(payload, scope)` runs
   through middleware. Ask-or-execute, confirmation and logging are middleware your app writes;
   `apps/example/src/confirm.ts` shows one.
@@ -106,8 +156,9 @@ any providers into the component you pass.
 
 ## Not built yet
 
-A zag.js-based component kit, the command palette, the watchable variants (polling, persistent,
-mixed-source), targeting, variable-size virtualization, devtools, `npm create`, and SSR (below).
+A zag.js-based component kit, the remaining watchable variants (persistent, URL-synced, per-key
+record, mixed-source), targeting, variable-size virtualization, devtools, `npm create`, and SSR
+(below).
 
 ## To do: server rendering
 

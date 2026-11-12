@@ -1,4 +1,5 @@
-import { untrack, type ActionRunner, type ModelScope } from '@beacon/core';
+import type { ActionRunner, ModelScope } from '@beacon/core';
+import { untrack } from '@beacon/core/internal';
 
 type Combo = {
   readonly key: string;

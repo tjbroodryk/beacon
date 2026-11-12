@@ -1,4 +1,5 @@
-import { Action, Model, Watchable, onCleanup, type ModelScope } from '@beacon/core';
+import { Action, Model, Watchable, type ModelScope } from '@beacon/core';
+import { onCleanup } from '@beacon/core/internal';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   For,

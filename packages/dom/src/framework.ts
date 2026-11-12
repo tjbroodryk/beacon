@@ -1,16 +1,10 @@
 import {
   ActionRunner,
-  ContextKey,
   DefaultResolver,
   ModelScope,
   Watchable,
-  getOwner,
-  onCleanup,
-  provideContext,
-  readContext,
-  root,
-  untrack,
   type Action,
+  type ActionState,
   type AnyAction,
   type Class,
   type Middleware,
@@ -21,6 +15,7 @@ import {
   type ReadonlyWatchable,
   type Resolver,
 } from '@beacon/core';
+import { ContextKey, getOwner, onCleanup, provideContext, readContext, root, untrack } from '@beacon/core/internal';
 import { createComponent, render } from 'dom-expressions/src/client.js';
 import type { JSX } from 'dom-expressions/src/jsx.js';
 import { installShortcuts } from './shortcuts';
@@ -194,6 +189,9 @@ export function useActions(source = 'view'): ScopedActions {
 export type BoundAction<P, Out> = {
   readonly action: Action<P, Out>;
   readonly applicable: ReadonlyWatchable<boolean>;
+  /** Idle, running, or how the last run ended, whether from here, a shortcut or the palette. */
+  readonly state: ReadonlyWatchable<ActionState>;
+  readonly pending: ReadonlyWatchable<boolean>;
   execute(...input: P extends void ? [] : [P]): Promise<Outcome<Out>>;
 };
 
@@ -202,9 +200,12 @@ export function useAction<P, Out>(cls: Class<Action<P, Out>>, source = 'view'): 
   const runner = requireContext(RUNNER);
   const scope = requireContext(SCOPE);
   const action = runner.get(cls);
+  const state = runner.stateOf(action);
   return {
     action,
     applicable: Watchable.from(() => action.applicable(scope)),
+    state,
+    pending: Watchable.from(() => state().kind === 'running'),
     execute: (...input: unknown[]) => runner.invoke(action, input[0], source, scope),
   };
 }
