@@ -1,4 +1,5 @@
-import { Watchable, effect, getOwner, onCleanup, root, untrack, type Owner } from '@beacon/core';
+import { Watchable } from '@beacon/core';
+import { effect, getOwner, onCleanup, root, untrack, type Owner } from '@beacon/core/internal';
 import { insert } from 'dom-expressions/src/client.js';
 import type { JSX } from 'dom-expressions/src/jsx.js';
 

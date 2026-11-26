@@ -1,0 +1,14 @@
+{
+  "name": "terminal-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun src/main.tsx",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@beacon/core": "workspace:*",
+    "@beacon/terminal": "workspace:*",
+    "yoga-layout": "^3.2.1"
+  }
+}

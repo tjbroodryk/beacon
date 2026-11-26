@@ -11,7 +11,7 @@ export default function beacon(): Plugin {
     name: 'beacon',
     enforce: 'pre',
     config: () => ({
-      resolve: { alias: { rxcore: fileURLToPath(new URL('./rxcore.ts', import.meta.url)) } },
+      resolve: { alias: { rxcore: fileURLToPath(import.meta.resolve('@beacon/core/rxcore')) } },
       // prebundling would resolve dom-expressions' "rxcore" import before the alias applies
       optimizeDeps: { exclude: ['dom-expressions', '@beacon/dom', '@beacon/core'] },
       // by the time Vite's own transform runs, only *.react.tsx files still contain JSX
@@ -32,7 +32,7 @@ export default function beacon(): Plugin {
         plugins: [
           [
             domExpressions,
-            { moduleName: '@beacon/dom', generate: 'dom', delegateEvents: true, wrapConditionals: true },
+            { moduleName: '@beacon/dom/runtime', generate: 'dom', delegateEvents: true, wrapConditionals: true },
           ],
         ],
       });

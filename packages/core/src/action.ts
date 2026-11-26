@@ -1,5 +1,13 @@
+import { fromValue } from './create-watchable';
 import type { ModelScope } from './model-scope';
 import type { Class } from './resolver';
+import { batch } from './signals';
+import type { ReadonlyWatchable, Watchable } from './watchable';
+
+/** An action's state across every invocation: idle, running, or how the last one ended. */
+export type ActionState<Out = unknown> = { readonly kind: 'idle' } | { readonly kind: 'running' } | Outcome<Out>;
+
+type Tracked = { running: number; readonly state: Watchable<ActionState> };
 
 /** The slice of Standard Schema (zod, valibot, arktype…) the runner needs. */
 export type StandardSchema<T> = {
@@ -54,6 +62,7 @@ export type Middleware = (
 export class ActionRunner {
   private readonly middleware: Middleware[] = [];
   private readonly byClass = new Map<Function, AnyAction>();
+  private readonly tracking = new Map<AnyAction, Tracked>();
 
   constructor(actions: readonly AnyAction[]) {
     for (const action of actions) {
@@ -78,7 +87,12 @@ export class ActionRunner {
     return action;
   }
 
-  invoke<P, Out>(
+  /** Running while any invocation is in flight, then the last outcome. Whoever invoked it. */
+  stateOf(action: AnyAction): ReadonlyWatchable<ActionState> {
+    return this.tracked(action).state;
+  }
+
+  async invoke<P, Out>(
     action: Action<P, Out>,
     input: unknown,
     source: string,
@@ -88,8 +102,25 @@ export class ActionRunner {
       (next, middleware) => (inv) => middleware(inv, next),
       (inv) => this.execute(inv)
     );
+    const tracked = this.tracked(action);
+    tracked.running++;
+    tracked.state.set({ kind: 'running' });
     // middleware sees actions untyped; the outcome's output is still the action's own
-    return run({ action, input, source, scope }) as Promise<Outcome<Out>>;
+    const outcome = (await run({ action, input, source, scope })) as Outcome<Out>;
+    tracked.running--;
+    if (tracked.running === 0) {
+      tracked.state.set(outcome);
+    }
+    return outcome;
+  }
+
+  private tracked(action: AnyAction): Tracked {
+    let tracked = this.tracking.get(action);
+    if (tracked === undefined) {
+      tracked = { running: 0, state: fromValue<ActionState>({ kind: 'idle' }) };
+      this.tracking.set(action, tracked);
+    }
+    return tracked;
   }
 
   private async execute(inv: Invocation): Promise<Outcome> {
@@ -103,7 +134,9 @@ export class ActionRunner {
         }
         payload = result.value;
       }
-      return { kind: 'completed', output: await inv.action.execute(payload, inv.scope) };
+      // one notification for everything an action writes before its first await
+      const output = batch(() => inv.action.execute(payload, inv.scope));
+      return { kind: 'completed', output: await output };
     } catch (error) {
       return { kind: 'failed', error };
     }

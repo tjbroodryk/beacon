@@ -5,13 +5,10 @@ import {
   Model,
   ModelScope,
   Watchable,
-  effect,
   isWatchable,
-  memo,
-  onCleanup,
-  root,
   type Middleware,
 } from './index';
+import { effect, memo, onCleanup, root } from './internal';
 
 describe('Watchable', () => {
   it('reads by calling, derives, and notifies subscribers of changes', () => {

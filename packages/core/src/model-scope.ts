@@ -1,6 +1,30 @@
+import type { ReadonlyWatchable } from './watchable';
+
+// held outside the class so a subclass overriding dispose() can't forget to release them
+const watches = new WeakMap<Model, Array<() => void>>();
+
 /** A viewmodel. Holds watchables; `dispose` runs when its scope goes away. */
 export abstract class Model {
+  /**
+   * Runs `listener` whenever `source` changes, for as long as this model is in
+   * scope. The one place for side effects driven by state (saving, syncing);
+   * there are no effects in views.
+   */
+  protected watch<T>(source: ReadonlyWatchable<T>, listener: (value: T) => void): void {
+    const stops = watches.get(this) ?? [];
+    stops.push(source.subscribe(listener));
+    watches.set(this, stops);
+  }
+
   dispose(): void {}
+}
+
+function release(model: Model): void {
+  for (const stop of watches.get(model) ?? []) {
+    stop();
+  }
+  watches.delete(model);
+  model.dispose();
 }
 
 export type ModelClass<T extends Model = Model> = abstract new (...args: never[]) => T;
@@ -41,7 +65,7 @@ export class ModelScope {
 
   dispose(): void {
     for (const model of this.models.splice(0)) {
-      model.dispose();
+      release(model);
     }
   }
 

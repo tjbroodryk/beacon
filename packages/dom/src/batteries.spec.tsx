@@ -1,4 +1,5 @@
-import { Action, Model, Watchable, onCleanup, type ModelScope } from '@beacon/core';
+import { Action, Model, Watchable, type ModelScope } from '@beacon/core';
+import { onCleanup, parseShortcut } from '@beacon/core/internal';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   For,
@@ -12,7 +13,6 @@ import {
   type Component,
   type MountOptions,
 } from './index';
-import { parseShortcut } from './shortcuts';
 
 let unmount = (): void => {};
 afterEach(() => unmount());

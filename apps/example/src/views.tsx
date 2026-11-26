@@ -1,4 +1,5 @@
 import {
+  Async,
   For,
   Scope,
   VirtualGrid,
@@ -10,11 +11,12 @@ import {
   type Component,
   type JSX,
 } from '@beacon/dom';
-import { Watchable, type AnyAction, type Outcome } from '@beacon/core';
+import { Watchable, type AnyAction, type AsyncWatchable, type Outcome } from '@beacon/core';
 import { ReactIsland } from '@beacon/react';
-import { AddTodo, ClearCompleted, RemoveTodo, ToggleTodo } from './actions';
+import { AddTodo, ClearCompleted, PingServer, RemoveTodo, ToggleTodo } from './actions';
 import { CommandBar, completion, prefixMatches } from './command-bar';
-import { BigList, Todo, TodoList } from './models';
+import { BigList, Search, ServerStatus, Todo, TodoList } from './models';
+import type { ServerLoad } from './services';
 import { RowCount } from './RowCount.react';
 
 const TodoInput = view([TodoList], (list) => {
@@ -250,9 +252,105 @@ const CommandCard: Component = () => (
   </section>
 );
 
+const errorText = (error: unknown): string => (error instanceof Error ? error.message : String(error));
+
+const SearchBox = view([Search], (search) => (
+  <div>
+    <div class="prompt">
+      <span class="dollar" aria-hidden="true">
+        $
+      </span>
+      <input
+        aria-label="search languages"
+        placeholder="search languages, e.g. sc"
+        value={search.query()}
+        onInput={(e) => search.query.set(e.currentTarget.value)}
+      />
+    </div>
+    <Async
+      of={search.results}
+      loading={() => <p class="hint">searching…</p>}
+      failed={(error, retry, previous) => (
+        <div class="async-failed">
+          <span>{errorText(error)}</span>
+          <button onClick={retry}>retry</button>
+          {previous === null ? null : <span class="hint">last results: {previous.join(', ') || 'none'}</span>}
+        </div>
+      )}
+    >
+      {(results, refreshing) => (
+        <p classList={{ results: true, refreshing: refreshing() }} aria-busy={refreshing()}>
+          {results().length === 0 ? 'no matches' : results().join(', ')}
+        </p>
+      )}
+    </Async>
+  </div>
+));
+
+function StatusLine(props: { label: string; of: AsyncWatchable<ServerLoad> }): JSX.Element {
+  return (
+    <div class="status-line">
+      <span class="count">{props.label}</span>
+      <Async
+        of={props.of}
+        loading={() => <span class="hint">checking…</span>}
+        failed={(error, _retry, previous) => (
+          <span class="error-text">
+            {errorText(error)}
+            {previous === null ? '' : ` · last load ${previous.load}%`}
+          </span>
+        )}
+      >
+        {(status, refreshing) => (
+          <span classList={{ refreshing: refreshing() }}>
+            load {status().load}% · {status().checkedAt.toLocaleTimeString()}
+          </span>
+        )}
+      </Async>
+    </div>
+  );
+}
+
+const ServerCard = view([ServerStatus], (status) => {
+  const ping = useAction(PingServer);
+  const lastPing = Watchable.from(() => {
+    const state = ping.state();
+    switch (state.kind) {
+      case 'idle':
+        return 'not pinged yet';
+      case 'running':
+        return 'waiting for a reply…';
+      case 'completed':
+        return `replied in ${String(state.output)} ms`;
+      case 'aborted':
+        return `ping ${state.reason}`;
+      case 'failed':
+        return `ping failed: ${errorText(state.error)}`;
+    }
+  });
+  return (
+    <section class="card">
+      <h2>server</h2>
+      <Label name="ASYNC" count="loading · ready · failed, all required" />
+      <SearchBox />
+      <StatusLine label="polls, keeps data" of={status.kept} />
+      <StatusLine label="polls, clears data" of={status.cleared} />
+      <div class="status-line">
+        <button disabled={ping.pending()} onClick={() => void ping.execute()}>
+          {ping.pending() ? 'pinging…' : 'ping server'}
+        </button>
+        <span class="hint" aria-live="polite">
+          {lastPing()}
+        </span>
+      </div>
+    </section>
+  );
+});
+
 export const App: Component = () => (
   <main class="page">
     <CommandCard />
+    <ServerCard />
     <TodosCard />
     <BigListCard />
     <GridCard />
