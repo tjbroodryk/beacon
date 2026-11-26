@@ -55,6 +55,8 @@ bun run typecheck
 | [`@beacon/dom`](packages/dom) | `mount`, `view`, `Scope`, `For` and `useAction`, plus the Vite plugin (`@beacon/dom/vite`) that compiles JSX with Solid's `babel-plugin-jsx-dom-expressions` against beacon's core. |
 | [`@beacon/inject`](packages/inject) | An optional DI container. Classes stay plain; `container.singleton(Class, [deps])` is type-checked against the constructor. Satisfies `Resolver` without importing core. |
 | [`@beacon/react`](packages/react) | `<ReactIsland>`: renders any React component (Radix, shadcn, a date picker) inside a view, with watchables as props. |
+| [`@beacon/terminal`](packages/terminal) | The same views, models and actions in a terminal, like Ink: `<box>` and `<text>` laid out by Yoga (a peer dependency: install `yoga-layout` next to it), frames redrawn in place, action shortcuts read from the keyboard. An early spike; preload `@beacon/terminal/bun` to compile JSX. |
+| [`terminal-example`](apps/terminal) | A keyboard-driven todo list: `bun run --cwd apps/terminal start`. |
 | [`example`](apps/example) | A command input over the applicable actions, todos (DI, per-row scopes, shortcuts, a confirm middleware), a virtual list sized by a Radix slider island, and a 100,000 × 1,000 virtual grid. |
 
 ## Out of the box
@@ -158,7 +160,9 @@ any providers into the component you pass.
 
 A zag.js-based component kit, the remaining watchable variants (persistent, URL-synced, per-key
 record, mixed-source), targeting, variable-size virtualization, devtools, `npm create`, and SSR
-(below).
+(below). In the terminal renderer: text input, focus (shortcuts all run against the root scope),
+clipping, flex wrap and per-side padding, a fullscreen mode with cell diffing, the kitty keyboard
+protocol, and a Node build plugin.
 
 ## To do: server rendering
 

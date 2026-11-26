@@ -1,8 +1,8 @@
-// The reactive primitives dom-expressions' runtime imports as "rxcore"; the
-// vite plugin aliases that specifier here.
-import { untrack } from '@beacon/core/internal';
+// The reactive primitives dom-expressions' runtime imports as "rxcore"; each
+// renderer's build plugin aliases that specifier here.
+import { untrack } from './reactive';
 
-export { effect, getOwner, memo, root, untrack } from '@beacon/core/internal';
+export { effect, getOwner, memo, root, untrack } from './reactive';
 
 // hydration state; unused until SSR exists
 export const sharedConfig: Record<string, unknown> = {};
